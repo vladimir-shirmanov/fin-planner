@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using UserManagement.Models;
 using UserManagement.Services;
 
@@ -23,7 +24,10 @@ public static class UserSettingsEndpoints
             .WithTags("User Settings");
     }
 
-    private static async Task<IResult> GetUserSettings(ClaimsPrincipal user, IMongoDbService db, ILogger logger)
+    private static async Task<IResult> GetUserSettings(
+        ClaimsPrincipal user,
+        IMongoDbService db,
+        [FromServices] ILogger logger)
     {
         // Extract userId from JWT claims
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -40,7 +44,11 @@ public static class UserSettingsEndpoints
         return settings is not null ? Results.Ok(settings) : Results.NotFound();
     }
 
-    private static async Task<IResult> CreateOrUpdateUserSettings(UserSettings user, ClaimsPrincipal claimsPrincipal, IMongoDbService db, ILogger logger)
+    private static async Task<IResult> CreateOrUpdateUserSettings(
+        UserSettings user, 
+        ClaimsPrincipal claimsPrincipal, 
+        IMongoDbService db, 
+        [FromServices] ILogger logger)
     {
         var userId = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
