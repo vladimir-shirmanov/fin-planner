@@ -5,6 +5,10 @@ using UserManagement.Services;
 
 namespace UserManagement;
 
+public class UserSettingsApi
+{
+}
+
 public static class UserSettingsEndpoints
 {
     public static void MapUserSettingsEndpoints(this IEndpointRouteBuilder routes)
@@ -27,7 +31,7 @@ public static class UserSettingsEndpoints
     private static async Task<IResult> GetUserSettings(
         ClaimsPrincipal user,
         IMongoDbService db,
-        [FromServices] ILogger logger)
+        [FromServices] ILogger<UserSettingsApi> logger)
     {
         // Extract userId from JWT claims
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -48,7 +52,7 @@ public static class UserSettingsEndpoints
         UserSettings user, 
         ClaimsPrincipal claimsPrincipal, 
         IMongoDbService db, 
-        [FromServices] ILogger logger)
+        [FromServices] ILogger<UserSettingsApi> logger)
     {
         var userId = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
