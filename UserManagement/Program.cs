@@ -68,7 +68,6 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
-//app.UseEnrichedOpenTelemetryLogging();
 app.UseAuthentication();
 app.UseAuthorization();
 
