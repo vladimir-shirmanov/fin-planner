@@ -1,5 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Serilog;
 using UserManagement;
 using UserManagement.Models;
@@ -13,10 +17,27 @@ if (!Directory.Exists(logDirectory))
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseSerilog((context, loggerConfiguration) =>
+builder.Host.UseSerilog((context, services, loggerConfiguration) =>
 {
-    loggerConfiguration.ReadFrom.Configuration(context.Configuration);
+    loggerConfiguration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services);
 });
+
+string serviceName = builder.Configuration.GetValue<string>("OpenTelemetry:Tracing:ServiceName") ??
+                     "user-management-api";
+string serviceVersion = builder.Configuration.GetValue<string>("OpenTelemetry:Tracing:ServiceVersion") ??
+                     "1.0.0";
+string otlpEndpoint = builder.Configuration.GetValue<string>("OpenTelemetry:Tracing:Endpoint") ??
+                      throw new InvalidOperationException();
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resourceBuilder => resourceBuilder.AddService(serviceName, serviceVersion))
+    .WithTracing(traceBuilder => traceBuilder
+        .AddSource(serviceName)
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation())
+    .WithMetrics(metrics => metrics.AddMeter(serviceName))
+    .UseOtlpExporter(OtlpExportProtocol.Grpc, new Uri(otlpEndpoint));
 
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDb"));
 builder.Services.AddSingleton<IMongoDbService, MongoDbService>();
@@ -47,6 +68,7 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
+//app.UseEnrichedOpenTelemetryLogging();
 app.UseAuthentication();
 app.UseAuthorization();
 
