@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
@@ -65,7 +66,16 @@ builder.Services.AddAuthorization();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
+string mongoConnectionString = builder.Configuration.GetValue<string>("MongoDb:ConnectionString") ?? throw new ArgumentNullException();
+builder.Services
+    .AddSingleton(_ => new MongoClient(mongoConnectionString))
+    .AddHealthChecks()
+    .AddMongoDb()
+    .AddKeycloakHealthCheck();
+
 var app = builder.Build();
+
+app.UseHealthChecks("/health");
 
 app.UseSerilogRequestLogging();
 app.UseAuthentication();
@@ -75,3 +85,5 @@ app.MapOpenApi();
 app.MapUserSettingsEndpoints();
 
 app.Run();
+
+

@@ -4,16 +4,65 @@ services:
     container_name: keycloak
     ports:
       - "8080:8080"
+      - "9000:9000"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: localhost
+      KC_PROXY: edge
+      KC_HEALTH_ENABLED: true
+      KC_HTTP_ENABLED: true
+      KC_METRICS_ENABLED: true
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      - budget-network
     command:
       start-dev
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s  # Keycloak needs longer startup time
+  
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: budget
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - budget-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d budget"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   mongodb:
     image: mongodb/mongodb-community-server:latest
     container_name: mongo
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - budget-network
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.runCommand(\"ping\").ok'"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   otel_collector:
     image: otel/opentelemetry-collector-contrib:0.117.0
     container_name: otel_collector
@@ -21,7 +70,42 @@ services:
       - "4317:4317"
       - "4318:4318"
       - "55679:55679"
+    volumes:
+      - ./otel-config.yaml:/etc/otelcol/config.yaml
+    command: ["--config=/etc/otelcol/config.yaml"]
+    networks:
+      - budget-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:13133/"]
+      interval: 10s
+      timeout: 3s
+
+# --- Services ---    
   user_mgm:
     build: ./UserManagement
     ports:
-      - "8081:8081"
+      - "8081:8080"
+    networks:
+      - budget-network
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  mongo_data:
+  keycloak_data:
+
+networks:
+  budget-network:
+    driver: bridge
