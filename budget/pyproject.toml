@@ -5,5 +5,22 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "asyncpg>=0.30.0",
     "fastapi[standard]>=0.115.5",
+    "httpx>=0.28.0",
+    "opentelemetry-api>=1.29.0",
+    "opentelemetry-exporter-otlp>=1.29.0",
+    "opentelemetry-instrumentation-fastapi>=0.50b0",
+    "opentelemetry-sdk>=1.29.0",
+    "pydantic-settings>=2.7.1",
+    "python-dotenv>=1.0.1",
+    "sqlalchemy>=2.0.37",
+    "uvicorn>=0.32.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.2",
+    "python-multipart>=0.0.19",
 ]

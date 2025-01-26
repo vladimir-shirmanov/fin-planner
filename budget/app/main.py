@@ -1,26 +1,39 @@
-from typing import Annotated
-from fastapi import FastAPI, Path, Query
-from .models.category import Category
-from .models.filter_params import FilterParams
+import logging
+import sys
 
-app = FastAPI()
+import uvicorn
+from contextlib import asynccontextmanager
 
-fake_items = [Category(id=i, name='task {}'.format(i)) for i in range(20)]
+from .dependencies.database import sessionmanager
+from .core.config import settings
+from fastapi import FastAPI
 
-@app.get("/items/")
-async def read_items(filter_query: Annotated[FilterParams, Query()]):
-    return filter_query.model_dump()
+from .routers import health
 
-@app.get("/items/{item_id}/")
-async def get_item(item_id: Annotated[int, Path(title='The ID of the item to get')],
-                   q: Annotated[str | None, Query(alias='item-query')] = None):
-    results: dict = fake_items[item_id].model_dump()
-    if q:
-        results.update({'q': q})
-    return results
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG if settings.debug_logs else logging.INFO)
 
-@app.post("/categories/")
-async def create_category(category: Category):
-    category_dict:dict = category.model_dump()
-    fake_items.append(category)
-    return category_dict
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    if sessionmanager._engine is not None:
+        await sessionmanager.close()
+
+app = FastAPI(
+    title=settings.SERVICE_NAME,
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+app.include_router(health.router)
+
+@app.get("/")
+async def root():
+    return {
+        "service": settings.SERVICE_NAME,
+        "version": "1.0.0",
+        "docs":"/docs",
+        "health":"/health"
+    }
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", reload=True, host="0.0.0.0", port=8083)
