@@ -1,29 +1,35 @@
-﻿from pydantic import BaseModel, Field, model_validator
-from datetime import date
-from typing import Self
+﻿from .base import Base
+from sqlalchemy import Column, Date, Float, ForeignKey, Integer, String, UUID, Enum, JSON
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import expression
+from .category import Category
+import enum
 
-class Budget(BaseModel):
-    id: int
-    name: str = Field(..., min_length=1, max_length=100)
-    description: str | None = None
-    start_date: date = Field(ge=date.today())
-    end_date: date = Field(gt=start_date)
+class BudgetType(enum.Enum):
+    PERCENTAGE = "percentage"
+    ENVELOPE = "envelope"
 
-class BudgetItem(BaseModel):
-    amount: float = Field(..., gt=0)
-    category_id: int = Field(...)
+class Budget(Base):
+    __tablename__ = "budgets"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    name = Column(String(50), nullable=False)
+    type = Column(Enum(BudgetType, name="budget_type_enum"), nullable=False)
+    currency = Column(String(3), nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
 
-class FixedBudget(Budget):
-    items: list[BudgetItem] = []
-    total_amount: sum([i.amount for i in items])
+    current_balance = Column(Float, default=0.0, server_default=expression.literal(0.0))
+    target_total = Column(Float, nullable=True)
 
-class SplitBudget(Budget):
-    savings_percent: float = Field(..., ge=0, le=100)
-    necessity_percent: float = Field(..., ge=0, le=100)
-    wants_percent: float = Field(..., ge=0, le=100)
+    percentage_breakdown = Column(JSON)
+    envelops = relationship("Envelop", back_populates="budget")
 
-    @model_validator(mode="after")
-    def validate_percentages(self) -> Self:
-        if sum([self.savings_percent, self.necessity_percent, self.wants_percent]) != 100:
-            raise ValueError("Percentages must sum to 100")
-        return self
+class Envelop(Base):
+    __tablename__ = "envelops"
+    id = Column(Integer, primary_key=True, index=True)
+    budget_id = Column(Integer, ForeignKey("budgets.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    allocated_amount = Column(Float, nullable=False)
+    spent_amount = Column(Float, default=0.0, server_default=expression.literal(0.0))
+    budget = relationship("Budget", back_populates="envelops")

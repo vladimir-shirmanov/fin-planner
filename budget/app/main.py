@@ -8,7 +8,7 @@ from .dependencies.database import sessionmanager
 from .core.config import settings
 from fastapi import FastAPI
 
-from .routers import health
+from .routers import health, categories
 
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG if settings.debug_logs else logging.INFO)
 
@@ -25,6 +25,7 @@ app = FastAPI(
 )
 
 app.include_router(health.router)
+app.include_router(categories.router)
 
 @app.get("/")
 async def root():

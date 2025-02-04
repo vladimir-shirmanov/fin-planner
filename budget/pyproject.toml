@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.14.1",
     "asyncpg>=0.30.0",
     "fastapi[standard]>=0.115.5",
     "httpx>=0.28.0",
@@ -14,7 +15,9 @@ dependencies = [
     "opentelemetry-sdk>=1.29.0",
     "pydantic-settings>=2.7.1",
     "python-dotenv>=1.0.1",
+    "python-json-logger>=3.2.1",
     "sqlalchemy>=2.0.37",
+    "structlog>=25.1.0",
     "uvicorn>=0.32.1",
 ]
 

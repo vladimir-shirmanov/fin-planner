@@ -1,13 +1,10 @@
 ﻿from typing import AsyncGenerator, Any, AsyncIterator
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncConnection
-from sqlalchemy.ext.declarative import declarative_base
 from contextlib import asynccontextmanager
 from ..core.config import settings
 
 DATABASE_NOT_INITIALIZED = "Database session manager has not been initialized"
-
-Base = declarative_base()
 
 class DatabaseSessionManager:
     def __init__(self, host:str, engine_kwargs:dict[str, Any] = {}):
