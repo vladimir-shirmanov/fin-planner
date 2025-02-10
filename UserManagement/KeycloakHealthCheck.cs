@@ -9,7 +9,7 @@ public class KeycloakHealthCheck : IHealthCheck
         using var client = new HttpClient();
         try
         {
-            var response = await client.GetAsync("http://keycloak:9000/health/ready", cancellationToken);
+            var response = await client.GetAsync("http://keycloak:9000/auth/health/ready", cancellationToken);
             return response.IsSuccessStatusCode ?
                 HealthCheckResult.Healthy("Keycloak is ready") :
                 HealthCheckResult.Unhealthy("Keycloak is unhealthy");

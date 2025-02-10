@@ -2,30 +2,69 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.7
     container_name: keycloak
-    ports:
-      - "8080:8080"
-      - "9000:9000"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KC_HOSTNAME: localhost
-      KC_PROXY: edge
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://identity_db:5432/identity_db
+      KC_DB_USERNAME: admin
+      KC_DB_PASSWORD: admin
       KC_HEALTH_ENABLED: true
-      KC_HTTP_ENABLED: true
       KC_METRICS_ENABLED: true
+      KC_HTTP_ENABLED: true
+      KC_HOSTNAME: localhost
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HOSTNAME_STRICT: false
+      KC_PROXY: edge
+      KC_PROXY_HEADERS: xforwarded
+      KC_PROXY_ADDRESS_FORWARDING: true
+    ports:
+      - "9000:9000"
     volumes:
       - keycloak_data:/opt/keycloak/data
+      - app_logs:/var/log/apps
     networks:
       - budget-network
     command:
       start-dev
+    depends_on:
+      identity_db:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /auth/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 40s  # Keycloak needs longer startup time
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
   
+  identity_db:
+    image: postgres:17
+    container_name: identity_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: identity_db
+    volumes:
+      - identity_data:/var/lib/postgresql/data
+      - app_logs:/var/log/apps
+    networks:
+      - budget-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d identity_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
   postgres:
     image: postgres:17
     container_name: postgres
@@ -35,6 +74,7 @@ services:
       POSTGRES_DB: budget
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - app_logs:/var/log/apps
     ports:
       - "5432:5432"
     networks:
@@ -44,6 +84,11 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   mongodb:
     image: mongodb/mongodb-community-server:latest
@@ -55,6 +100,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: admin
     volumes:
       - mongo_data:/data/db
+      - app_logs:/var/log/apps
     networks:
       - budget-network
     healthcheck:
@@ -62,6 +108,11 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   otel_collector:
     image: otel/opentelemetry-collector-contrib:0.117.0
@@ -80,13 +131,44 @@ services:
       interval: 10s
       timeout: 3s
 
+  fluent-bit:
+    image: fluent/fluent-bit
+    volumes:
+      - app_logs:/var/log/apps
+      - ./fluent-bit.yaml:/fluent-bit/etc/fluent-bit.yaml
+    networks:
+      - budget-network
+    depends_on:
+      - otel_collector
+
+
+  yarp:
+    build:
+      context: fin-planner-yarp
+      dockerfile: Dockerfile.yarp
+    volumes:
+      - app_logs:/var/log/apps
+    ports:
+      - "5000:8080"
+    networks:
+      - budget-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - keycloak
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
 # --- Services ---    
   user_mgm:
     build: ./UserManagement
-    ports:
-      - "8081:8080"
     networks:
       - budget-network
+    volumes:
+      - app_logs:/var/log/apps
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     healthcheck:
@@ -100,6 +182,11 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   budget_svc:
     build:
@@ -107,8 +194,8 @@ services:
       dockerfile: Dockerfile
     environment:
       DATABASE_URL: postgresql+asyncpg://admin:admin@postgres:5432/budget
-    ports:
-      - "8083:8083"
+    volumes:
+      - app_logs:/var/log/apps
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
       interval: 30s
@@ -120,11 +207,18 @@ services:
         condition: service_healthy
     networks:
       - budget-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
 
 volumes:
   postgres_data:
+  identity_data:
   mongo_data:
   keycloak_data:
+  app_logs:
 
 networks:
   budget-network:

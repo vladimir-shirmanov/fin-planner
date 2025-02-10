@@ -3,13 +3,13 @@ from fastapi import Depends
 from sqlalchemy.future import select
 from ..dependencies.core import db_session_dep, logger_dep
 from ..models.category import CategoryCreate, CategoryResponse, Category
-import uuid
+from ..models.user import User
 
-async def create_category(category: CategoryCreate, db: db_session_dep, log: logger_dep) -> CategoryResponse:
+async def create_category(category: CategoryCreate, user:User, db: db_session_dep, log: logger_dep) -> CategoryResponse:
     """Create a new category"""
     log = log.bind(category=category)
     await log.ainfo("BEGIN create_category")
-    db_category = Category(**category.model_dump(), user_id=uuid.uuid4())
+    db_category = Category(**category.model_dump(), user_id=user.user_id)
     db.add(db_category)
     await db.commit()
     await db.refresh(db_category)

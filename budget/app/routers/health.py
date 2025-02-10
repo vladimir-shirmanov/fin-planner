@@ -1,16 +1,14 @@
-﻿import logging
-from fastapi import APIRouter, status
+﻿from fastapi import APIRouter, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from starlette.responses import JSONResponse
 
 from ..core.config import settings
-from ..dependencies.core import db_session_dep
+from ..dependencies.core import db_session_dep, logger_dep
 
-logger = logging.getLogger(__name__)
 router = APIRouter(tags=["health"])
 
-async def check_database_health(db: AsyncSession) -> bool:
+async def check_database_health(db: AsyncSession, logger) -> bool:
     """Check PostgreSQL connection by executing query"""
     try:
         await db.execute(text("SELECT 1"))
@@ -28,8 +26,8 @@ async def check_database_health(db: AsyncSession) -> bool:
         return False
 
 @router.get("/health", summary="Service Health check")
-async def health(db: db_session_dep):
-    db_health = await check_database_health(db)
+async def health(db: db_session_dep, logger: logger_dep):
+    db_health = await check_database_health(db, logger)
     result = {
         "service":"Budget Service",
         "status":"healthy" if db_health else "unhealthy",

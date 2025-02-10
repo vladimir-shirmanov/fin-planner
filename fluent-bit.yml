@@ -1,0 +1,20 @@
+service:
+  log_level: info
+  disable_metrics: on
+
+pipeline:
+  inputs:
+    - name: tail
+      path: /var/log/apps/*.log
+      multiline.parser: docker, cri
+      tag: app.*
+      read_from_head: true
+
+  outputs:
+    - name: opentelemetry
+      match: "*"
+      host: otel_collector
+      port: 4318
+      logs_uri: /v1/logs
+      log_response_payload: true
+      tls: off
