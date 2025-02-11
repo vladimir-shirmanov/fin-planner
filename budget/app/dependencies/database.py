@@ -2,13 +2,14 @@
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncConnection
 from contextlib import asynccontextmanager
-from ..core.config import settings
+from fastapi import Depends
+from ..core.config import settings_dep, Settings
 
 DATABASE_NOT_INITIALIZED = "Database session manager has not been initialized"
 
 class DatabaseSessionManager:
-    def __init__(self, host:str, engine_kwargs:dict[str, Any] = {}):
-        self._engine = create_async_engine(host, **engine_kwargs)
+    def __init__(self, settings: Settings):
+        self._engine = create_async_engine(settings.DATABASE_URL, {'echo': settings.echo_sql})
         self._sessionmaker = async_sessionmaker(bind=self._engine, autocommit=False)
 
     async def close(self):
@@ -43,8 +44,9 @@ class DatabaseSessionManager:
         finally:
             await session.close()
 
-sessionmanager = DatabaseSessionManager(settings.DATABASE_URL, {"echo": settings.echo_sql})
+def get_session_manager(settings: settings_dep) -> DatabaseSessionManager:
+    return DatabaseSessionManager(settings)
 
-async def get_db() -> AsyncGenerator:
+async def get_db(sessionmanager:DatabaseSessionManager = Depends(get_session_manager)) -> AsyncGenerator:
     async with sessionmanager.session() as session:
         yield session

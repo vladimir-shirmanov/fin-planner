@@ -4,8 +4,10 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
-from ...models.category import Category, CategoryCreate, CategoryResponse, CategoryType
-from ...services.categories_service import get_categories, create_category
+
+from ..models.user import User
+from ..models.category import Category, CategoryCreate, CategoryResponse, CategoryType
+from ..services.categories_service import CategoryService
 
 @pytest.fixture
 def mock_db():
@@ -23,6 +25,10 @@ def mock_logger():
     logger.bind = MagicMock(return_value=logger)
     logger.ainfo = AsyncMock()
     return logger
+
+@pytest.fixture
+def category_service(mock_db, mock_logger):
+    return CategoryService(mock_db, mock_logger)
 
 @pytest.mark.asyncio
 async def test_create_category_invalid_data():
@@ -45,7 +51,7 @@ async def test_create_category_invalid_data():
 
 
 @pytest.mark.asyncio
-async def test_create_category(mock_db, mock_logger):
+async def test_create_category(category_service):
     """Test create_category with valid data should return CategoryResponse"""
     # Arrange
     category_create = CategoryCreate(
@@ -53,9 +59,10 @@ async def test_create_category(mock_db, mock_logger):
         type=CategoryType.NEEDS,
         parent_category_id=None
     )
+    user = User(user_id=uuid.uuid4(), email='s')
 
     # Act
-    result = await create_category(category_create, uuid.uuid4(), mock_db, mock_logger)
+    result = await category_service.create(category_create, user)
 
     # Assert
     assert isinstance(result, CategoryResponse)
@@ -64,16 +71,16 @@ async def test_create_category(mock_db, mock_logger):
     assert isinstance(result.user_id, UUID)
     
     # Verify DB calls
-    mock_db.add.assert_called_once()
-    mock_db.commit.assert_called_once()
-    mock_db.refresh.assert_called_once()
+    category_service.db.add.assert_called_once()
+    category_service.db.commit.assert_called_once()
+    category_service.db.refresh.assert_called_once()
     
     # Verify logger calls
-    assert mock_logger.bind.called
-    assert mock_logger.ainfo.call_count == 2
+    assert category_service.logger.bind.called
+    assert category_service.logger.ainfo.call_count == 2
 
 @pytest.mark.asyncio
-async def test_get_categories(mock_db, mock_logger):
+async def test_get_categories(category_service):
     """Test get_categories should return list of CategoryResponse"""
     # Arrange
     mock_categories = [
@@ -96,10 +103,10 @@ async def test_get_categories(mock_db, mock_logger):
     mock_result.scalars = MagicMock(return_value=mock_scalars)
     mock_scalars.all = MagicMock(return_value=mock_categories)
 
-    mock_db.execute.return_value = mock_result
+    category_service.db.execute.return_value = mock_result
 
     # Act
-    result = await get_categories(mock_db, mock_logger)
+    result = await category_service.get()
 
     # Assert
     assert isinstance(result, list)
@@ -109,13 +116,13 @@ async def test_get_categories(mock_db, mock_logger):
     assert result[1].name == "Category 2"
     
     # Verify DB calls
-    mock_db.execute.assert_called_once()
+    category_service.db.execute.assert_called_once()
     
     # Verify logger calls
-    assert mock_logger.ainfo.call_count == 2  # BEGIN and END logs
+    assert category_service.logger.ainfo.call_count == 2  # BEGIN and END logs
 
 @pytest.mark.asyncio
-async def test_create_category_with_parent(mock_db, mock_logger):
+async def test_create_category_with_parent(category_service):
     """Test create_category with parent category should return CategoryResponse"""
     # Arrange
     category_create = CategoryCreate(
@@ -123,9 +130,10 @@ async def test_create_category_with_parent(mock_db, mock_logger):
         type=CategoryType.NEEDS,
         parent_category_id=1,
     )
+    user = User(user_id=uuid.uuid4(), email='s')
 
     # Act
-    result = await create_category(category_create, uuid.uuid4(), mock_db, mock_logger)
+    result = await category_service.create(category_create, user)
 
     # Assert
     assert isinstance(result, CategoryResponse)
@@ -133,17 +141,17 @@ async def test_create_category_with_parent(mock_db, mock_logger):
     assert result.parent_category_id == 1
 
 @pytest.mark.asyncio
-async def test_get_categories_empty(mock_db, mock_logger):
+async def test_get_categories_empty(category_service):
     """Test get_categories with no data should return empty list"""
     # Arrange
     mock_result = AsyncMock()
     mock_scalars = AsyncMock()
     mock_result.scalars = MagicMock(return_value=mock_scalars)
     mock_scalars.all = MagicMock(return_value=[])
-    mock_db.execute.return_value = mock_result
+    category_service.db.execute.return_value = mock_result
 
     # Act
-    result = await get_categories(mock_db, mock_logger)
+    result = await category_service.get()
 
     # Assert
     assert isinstance(result, list)
