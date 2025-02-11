@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter
 from ..models.category import CategoryCreate, CategoryResponse
-from ..services.categories_service import CreateDependency, GetDependency
+from ..services.categories_service import CategoryServiceDep
 from ..services.auth import current_user_dep
 
 router = APIRouter(prefix="/category", tags=["categories"])
@@ -10,11 +10,11 @@ router = APIRouter(prefix="/category", tags=["categories"])
 async def create_category(
     category: CategoryCreate,
     user: current_user_dep,
-    create: CreateDependency):
+    service: CategoryServiceDep):
     """Create a new category"""
-    return create
+    return await service.create(category, user)
 
 @router.get("", response_model=List[CategoryResponse])
-async def get_categories(get: GetDependency):
+async def get_categories(service: CategoryServiceDep):
     """Get all categories"""
-    return get
+    return await service.get()

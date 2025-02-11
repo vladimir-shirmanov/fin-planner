@@ -131,17 +131,6 @@ services:
       interval: 10s
       timeout: 3s
 
-  fluent-bit:
-    image: fluent/fluent-bit
-    volumes:
-      - app_logs:/var/log/apps
-      - ./fluent-bit.yaml:/fluent-bit/etc/fluent-bit.yaml
-    networks:
-      - budget-network
-    depends_on:
-      - otel_collector
-
-
   yarp:
     build:
       context: fin-planner-yarp
