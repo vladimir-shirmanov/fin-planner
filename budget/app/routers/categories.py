@@ -10,7 +10,7 @@ router = APIRouter(prefix="/category", tags=["categories"])
 async def create_category(
     category: CategoryCreate,
     user: current_user_dep,
-    service: CategoryServiceDep):
+    service: CategoryServiceDep) -> CategoryResponse:
     """Create a new category"""
     return await service.create(category, user)
 

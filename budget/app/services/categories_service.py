@@ -3,7 +3,7 @@ from fastapi import Depends
 from sqlalchemy.future import select
 from ..dependencies.core import db_session_dep, logger_dep
 from ..models.category import CategoryCreate, CategoryResponse, Category
-from ..models.user import User
+from uuid import UUID
 
 
 class CategoryService:
@@ -11,11 +11,11 @@ class CategoryService:
         self.db = db
         self.logger = logger
 
-    async def create(self, category: CategoryCreate, user: User) -> CategoryResponse:
+    async def create(self, category: CategoryCreate, user_id: UUID) -> CategoryResponse:
         """Create a new category"""
         self.logger = self.logger.bind(category=category)
         await self.logger.ainfo("BEGIN create_category")
-        db_category = Category(**category.model_dump(), user_id=user.user_id)
+        db_category = Category(**category.model_dump(), user_id=user_id)
         self.db.add(db_category)
         await self.db.commit()
         await self.db.refresh(db_category)

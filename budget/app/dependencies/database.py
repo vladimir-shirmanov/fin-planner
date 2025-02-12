@@ -1,52 +1,22 @@
-﻿from typing import AsyncGenerator, Any, AsyncIterator
+﻿from typing import AsyncGenerator
 
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncConnection
-from contextlib import asynccontextmanager
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncEngine
 from fastapi import Depends
-from ..core.config import settings_dep, Settings
+from ..core.config import get_settings, Settings
 
 DATABASE_NOT_INITIALIZED = "Database session manager has not been initialized"
 
-class DatabaseSessionManager:
-    def __init__(self, settings: Settings):
-        self._engine = create_async_engine(settings.DATABASE_URL, {'echo': settings.echo_sql})
-        self._sessionmaker = async_sessionmaker(bind=self._engine, autocommit=False)
+def create_engine_and_session(settings: Settings):
+    engine: AsyncEngine = create_async_engine(settings.DATABASE_URL, echo=settings.echo_sql)
+    session_maker = async_sessionmaker(bind=engine, autocommit=False)
+    return engine, session_maker
 
-    async def close(self):
-        if self._engine is None:
-            raise RuntimeError(DATABASE_NOT_INITIALIZED)
-        await self._engine.dispose()
-
-        self._engine = None
-        self._sessionmaker = None
-
-    @asynccontextmanager
-    async def connect(self) -> AsyncIterator[AsyncConnection]:
-        if self._engine is None:
-            raise RuntimeError(DATABASE_NOT_INITIALIZED)
-
-        async with self._engine.begin() as connection:
-            try:
-                yield connection
-            except Exception:
-                await connection.rollback()
-                raise
-    @asynccontextmanager
-    async def session(self) -> AsyncIterator[AsyncSession]:
-        if self._sessionmaker is None:
-            raise RuntimeError(DATABASE_NOT_INITIALIZED)
-        session = self._sessionmaker()
+async def get_db(settings: Settings = Depends(get_settings)) -> AsyncGenerator[AsyncSession, None]:
+    engine, session_maker = create_engine_and_session(settings)
+    async with session_maker() as session:
         try:
             yield session
-        except Exception:
-            await session.rollback()
-            raise
         finally:
-            await session.close()
+            await session.aclose()
 
-def get_session_manager(settings: settings_dep) -> DatabaseSessionManager:
-    return DatabaseSessionManager(settings)
-
-async def get_db(sessionmanager:DatabaseSessionManager = Depends(get_session_manager)) -> AsyncGenerator:
-    async with sessionmanager.session() as session:
-        yield session
+        await engine.dispose()
