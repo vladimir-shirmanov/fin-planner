@@ -5,9 +5,9 @@ from uuid import UUID
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models.user import User
-from ..models.category import Category, CategoryCreate, CategoryResponse, CategoryType
-from ..services.categories_service import CategoryService
+from ...models.user import User
+from ...models.category import Category, CategoryCreate, CategoryResponse, CategoryType
+from ...services.categories_service import CategoryService
 
 @pytest.fixture
 def mock_db():
@@ -62,7 +62,7 @@ async def test_create_category(category_service):
     user = User(user_id=uuid.uuid4(), email='s')
 
     # Act
-    result = await category_service.create(category_create, user)
+    result = await category_service.create(category_create, user.user_id)
 
     # Assert
     assert isinstance(result, CategoryResponse)
@@ -133,7 +133,7 @@ async def test_create_category_with_parent(category_service):
     user = User(user_id=uuid.uuid4(), email='s')
 
     # Act
-    result = await category_service.create(category_create, user)
+    result = await category_service.create(category_create, user.user_id)
 
     # Assert
     assert isinstance(result, CategoryResponse)
