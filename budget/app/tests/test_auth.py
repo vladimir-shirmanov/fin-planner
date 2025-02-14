@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from jwt.exceptions import InvalidTokenError
 from jwt import PyJWKClient
-from ..services.auth import get_auth_scheme, get_current_user, get_jwks_client
+from ..services.auth import get_current_user, get_jwks_client
 
 # Mock data
 TEST_TOKEN = "test.jwt.token"
@@ -42,12 +42,6 @@ def test_get_jwks_client(mock_settings):
     assert isinstance(jwks_client, PyJWKClient)
 
 @pytest.mark.asyncio
-async def test_get_auth_scheme(mock_settings):
-    """Test auth scheme creation"""
-    scheme = get_auth_scheme(mock_settings)
-    assert  isinstance(scheme, OAuth2AuthorizationCodeBearer)
-
-@pytest.mark.asyncio
 async def test_get_current_user_success(mock_settings, mock_logger, mock_jwks_client):
     """Test successful user authentication"""
     # Arrange
@@ -67,7 +61,6 @@ async def test_get_current_user_success(mock_settings, mock_logger, mock_jwks_cl
         # Assert
         assert user.user_id == UUID(TEST_USER_ID)
         assert user.email == TEST_EMAIL
-        mock_logger.ainfo.assert_called()
         mock_jwks_client.get_signing_key_from_jwt.assert_called_once_with(TEST_TOKEN)
 
 @pytest.mark.asyncio
@@ -82,7 +75,7 @@ async def test_get_current_user_invalid_token(mock_settings, mock_logger, mock_j
     
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "Invalid token"
-    mock_logger.aerror.assert_called_once()
+    mock_logger.aexception.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_get_current_user_missing_claims(mock_settings, mock_logger, mock_jwks_client):
@@ -100,4 +93,4 @@ async def test_get_current_user_missing_claims(mock_settings, mock_logger, mock_
             await get_current_user(mock_settings, mock_logger, TEST_TOKEN, mock_jwks_client)
         
         assert exc_info.value.status_code == 401
-        mock_logger.aerror.assert_called_once()
+        mock_logger.aexception.assert_called_once()

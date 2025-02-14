@@ -5,7 +5,7 @@ from starlette.responses import JSONResponse
 from structlog import BoundLogger
 
 from ..core.config import Settings, get_settings
-from ..dependencies.core import db_session_dep, logger_dep
+from ..dependencies.core import db_session_dep, NamedLogger
 
 router = APIRouter(tags=["health"])
 
@@ -27,7 +27,7 @@ async def check_database_health(db: AsyncSession, logger: BoundLogger, settings:
         return False
 
 @router.get("/health", summary="Service Health check")
-async def health(db: db_session_dep, logger: logger_dep, settings: Settings = Depends(get_settings)):
+async def health(db: db_session_dep, logger = Depends(NamedLogger('health')), settings: Settings = Depends(get_settings)):
     db_health = await check_database_health(db, logger, settings)
     result = {
         "service":"Budget Service",

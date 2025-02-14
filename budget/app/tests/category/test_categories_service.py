@@ -20,10 +20,7 @@ def mock_db():
 
 @pytest.fixture
 def mock_logger():
-    """Mock structured logger"""
     logger = AsyncMock()
-    logger.bind = MagicMock(return_value=logger)
-    logger.ainfo = AsyncMock()
     return logger
 
 @pytest.fixture
@@ -56,7 +53,7 @@ async def test_create_category(category_service):
     # Arrange
     category_create = CategoryCreate(
         name="Test Category",
-        type=CategoryType.NEEDS,
+        type=CategoryType.EXPENSE,
         parent_category_id=None
     )
     user = User(user_id=uuid.uuid4(), email='s')
@@ -67,17 +64,13 @@ async def test_create_category(category_service):
     # Assert
     assert isinstance(result, CategoryResponse)
     assert result.name == "Test Category"
-    assert result.type == CategoryType.NEEDS
+    assert result.type == CategoryType.EXPENSE
     assert isinstance(result.user_id, UUID)
     
     # Verify DB calls
     category_service.db.add.assert_called_once()
     category_service.db.commit.assert_called_once()
     category_service.db.refresh.assert_called_once()
-    
-    # Verify logger calls
-    assert category_service.logger.bind.called
-    assert category_service.logger.ainfo.call_count == 2
 
 @pytest.mark.asyncio
 async def test_get_categories(category_service):
@@ -87,7 +80,7 @@ async def test_get_categories(category_service):
         Category(
             id=1,
             name="Category 1",
-            type=CategoryType.NEEDS,
+            type=CategoryType.EXPENSE,
             user_id=UUID('12345678-1234-5678-1234-567812345678')
         ),
         Category(
@@ -117,9 +110,6 @@ async def test_get_categories(category_service):
     
     # Verify DB calls
     category_service.db.execute.assert_called_once()
-    
-    # Verify logger calls
-    assert category_service.logger.ainfo.call_count == 2  # BEGIN and END logs
 
 @pytest.mark.asyncio
 async def test_create_category_with_parent(category_service):
@@ -127,7 +117,7 @@ async def test_create_category_with_parent(category_service):
     # Arrange
     category_create = CategoryCreate(
         name="Child Category",
-        type=CategoryType.NEEDS,
+        type=CategoryType.EXPENSE,
         parent_category_id=1,
     )
     user = User(user_id=uuid.uuid4(), email='s')
