@@ -12,7 +12,7 @@ async def create_category(
     user: current_user_dep,
     service: CategoryServiceDep) -> CategoryResponse:
     """Create a new category"""
-    return await service.create(category, user)
+    return await service.create(category, user.user_id)
 
 @router.get("", response_model=List[CategoryResponse])
 async def get_categories(service: CategoryServiceDep):

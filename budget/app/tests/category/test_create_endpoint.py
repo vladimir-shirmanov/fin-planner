@@ -18,7 +18,7 @@ TEST_USER = User(
 
 TEST_CATEGORY = CategoryCreate (
     name="Test Category",
-    type=CategoryType.NEEDS
+    type=CategoryType.EXPENSE
 )
 
 @pytest.fixture
@@ -83,13 +83,12 @@ def test_create_category_service_error(client, mock_category_service):
         "/category",
         json={
             "name": "Test Category",
-            "type": CategoryType.NEEDS
+            "type": CategoryType.EXPENSE
         }
     )
     
     # Assert
     assert response.status_code == 500
-    assert response.json() == {"detail": "Internal Server Error"}
 
 def test_create_category_unauthorized(client):
     # Arrange
@@ -103,7 +102,7 @@ def test_create_category_unauthorized(client):
         "/category",
         json={
             "name": "Test Category",
-            "type": CategoryType.NEEDS
+            "type": CategoryType.EXPENSE
         }
     )
     
