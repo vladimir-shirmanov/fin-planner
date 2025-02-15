@@ -2,7 +2,7 @@ import uvicorn
 from contextlib import asynccontextmanager
 
 from .dependencies.database import create_engine_and_session
-from .core.config import get_settings
+from .configs.config import get_settings
 from .core.logging import configure_logging
 from .core.logging_middleware import StructLogMiddleware
 from asgi_correlation_id import CorrelationIdMiddleware

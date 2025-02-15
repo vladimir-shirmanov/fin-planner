@@ -15,6 +15,6 @@ async def create_category(
     return await service.create(category, user.user_id)
 
 @router.get("", response_model=List[CategoryResponse])
-async def get_categories(service: CategoryServiceDep):
-    """Get all categories"""
-    return await service.get()
+async def get_categories(user: current_user_dep, service: CategoryServiceDep):
+    """Get all default categories and those created by user"""
+    return await service.get(user.user_id)

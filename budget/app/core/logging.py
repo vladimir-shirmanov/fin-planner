@@ -2,8 +2,6 @@ import logging
 import structlog
 from structlog.types import EventDict, Processor
 
-from .config import Settings
-
 def drop_color_message_key(_, __, event_dict: EventDict) -> EventDict:
     event_dict.pop("color_message", None)
     return event_dict

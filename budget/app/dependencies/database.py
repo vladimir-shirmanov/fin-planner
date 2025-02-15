@@ -2,7 +2,7 @@
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncEngine
 from fastapi import Depends
-from ..core.config import get_settings, Settings
+from ..configs.config import get_settings, Settings
 
 DATABASE_NOT_INITIALIZED = "Database session manager has not been initialized"
 
