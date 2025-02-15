@@ -4,7 +4,7 @@ from uuid import UUID
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from ...services.categories_service import CategoryService
-from ...services.auth import current_user_dep, get_current_user
+from ...services.auth import get_current_user
 from ...dependencies.database import get_db
 from ...main import app
 from fastapi.testclient import TestClient

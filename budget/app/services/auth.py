@@ -4,7 +4,7 @@ from uuid import UUID
 from jwt import PyJWKClient
 import jwt
 from typing import Annotated
-from ..core.config import settings_dep, get_settings
+from ..configs.config import settings_dep, get_settings
 from ..models.user import User
 from ..dependencies.core import NamedLogger
 from structlog.stdlib import BoundLogger
