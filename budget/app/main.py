@@ -7,7 +7,7 @@ from .infrastructure.logging.logging import configure_logging
 from .infrastructure.logging.logging_middleware import StructLogMiddleware
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
-from .routers import health, categories
+from .routers import health, categories, budget
 from .utils.init_db import init_db
 
 @asynccontextmanager
@@ -34,6 +34,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(categories.router)
+    app.include_router(budget.router)
 
     @app.get("/")
     async def root():
