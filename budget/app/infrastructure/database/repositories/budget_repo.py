@@ -5,7 +5,7 @@ from ....infrastructure.database.models import Budget
 
 from sqlalchemy.future import select
 
-class BudgetRepository(Repository):
+class BudgetRepository(Repository[BudgetBase]):
     def __init__(self, db: db_session_dep):
         self.db = db
 
