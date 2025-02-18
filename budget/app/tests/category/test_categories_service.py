@@ -5,9 +5,9 @@ from uuid import UUID
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...models.user import User
-from ...models.category import Category, CategoryCreate, CategoryResponse, CategoryType
-from ...services.categories_service import CategoryService
+from ...domain.schemas import User, CategoryCreate, CategoryResponse, CategoryType
+from ...infrastructure.database.models import Category
+from ...application.services import CategoryService
 
 @pytest.fixture
 def mock_db():

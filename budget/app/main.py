@@ -1,10 +1,10 @@
 import uvicorn
 from contextlib import asynccontextmanager
 
-from .dependencies.database import create_engine_and_session
-from .configs.config import get_settings
-from .core.logging import configure_logging
-from .core.logging_middleware import StructLogMiddleware
+from .infrastructure.database.database import create_engine_and_session
+from .domain.configs.config import get_settings
+from .infrastructure.logging.logging import configure_logging
+from .infrastructure.logging.logging_middleware import StructLogMiddleware
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from .routers import health, categories

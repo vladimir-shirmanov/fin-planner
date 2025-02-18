@@ -1,5 +1,5 @@
 from uuid import UUID
-from ..models.category import CategoryType
+from ...domain.schemas.category import CategoryType
 
 ADMIN_USER_ID = UUID('00000000-0000-0000-0000-000000000000')
 

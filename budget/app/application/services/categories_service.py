@@ -2,8 +2,9 @@ from typing import List, Annotated
 from fastapi import Depends
 from sqlalchemy.future import select
 from ..dependencies.core import db_session_dep, NamedLogger
-from ..models.category import CategoryCreate, CategoryResponse, Category
-from ..configs.categories_init import ADMIN_USER_ID
+from ...domain.schemas.category import CategoryCreate, CategoryResponse
+from ...domain.configs.categories_init import ADMIN_USER_ID
+from ...infrastructure.database.models.category import Category
 from uuid import UUID
 
 class CategoryService:

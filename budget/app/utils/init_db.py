@@ -1,5 +1,5 @@
-from ..configs.categories_init import DEFAULT_CATEGORIES, ADMIN_USER_ID
-from ..models.category import Category
+from ..domain.configs import DEFAULT_CATEGORIES, ADMIN_USER_ID
+from ..infrastructure.database.models import Category
 from sqlalchemy import text
 
 async def init_db(db):

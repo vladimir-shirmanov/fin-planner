@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from jwt.exceptions import InvalidTokenError
 from jwt import PyJWKClient
-from ..services.auth import get_current_user, get_jwks_client
+from ..infrastructure.auth.auth import get_current_user, get_jwks_client
 
 # Mock data
 TEST_TOKEN = "test.jwt.token"

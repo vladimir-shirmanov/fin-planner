@@ -1,11 +1,11 @@
-from ...models.user import User
-from ...models.category import CategoryCreate, CategoryType, CategoryResponse
+from ...domain.schemas.user import User
+from ...domain.schemas.category import CategoryCreate, CategoryType, CategoryResponse
 from uuid import UUID
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from ...services.categories_service import CategoryService
-from ...services.auth import get_current_user
-from ...dependencies.database import get_db
+from ...application.services.categories_service import CategoryService
+from ...infrastructure.auth.auth import get_current_user
+from ...infrastructure.database.database import get_db
 from ...main import app
 from fastapi.testclient import TestClient
 from fastapi import HTTPException

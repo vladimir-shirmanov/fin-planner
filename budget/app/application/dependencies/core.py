@@ -1,6 +1,6 @@
 ﻿from typing import Annotated
 import structlog
-from ..dependencies.database import get_db
+from ...infrastructure.database.database import get_db
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 

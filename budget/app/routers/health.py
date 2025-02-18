@@ -4,8 +4,8 @@ from sqlalchemy import text
 from starlette.responses import JSONResponse
 from structlog import BoundLogger
 
-from ..configs.config import Settings, get_settings
-from ..dependencies.core import db_session_dep, NamedLogger
+from ..domain.configs.config import Settings, get_settings
+from ..application.dependencies.core import db_session_dep, NamedLogger
 
 router = APIRouter(tags=["health"])
 

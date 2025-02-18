@@ -1,8 +1,8 @@
 from typing import List
 from fastapi import APIRouter
-from ..models.category import CategoryCreate, CategoryResponse
-from ..services.categories_service import CategoryServiceDep
-from ..services.auth import current_user_dep
+from ..domain.schemas import CategoryCreate, CategoryResponse
+from ..application.services import CategoryServiceDep
+from ..infrastructure.auth import current_user_dep
 
 router = APIRouter(prefix="/category", tags=["categories"])
 

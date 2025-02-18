@@ -1,12 +1,12 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from uuid import UUID
-from jwt import PyJWKClient
 import jwt
+from jwt import PyJWKClient
 from typing import Annotated
-from ..configs.config import settings_dep, get_settings
-from ..models.user import User
-from ..dependencies.core import NamedLogger
+from ...domain.configs.config import settings_dep, get_settings
+from ...domain.schemas.user import User
+from ...application.dependencies.core import NamedLogger
 from structlog.stdlib import BoundLogger
 
 settings = get_settings()
