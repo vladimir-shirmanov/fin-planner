@@ -7,8 +7,13 @@ from .infrastructure.logging.logging import configure_logging
 from .infrastructure.logging.logging_middleware import StructLogMiddleware
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from .routers import health, categories, budget
 from .utils.init_db import init_db
+
+origins = [
+    '*'
+]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,11 +31,16 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.SERVICE_NAME,
         version="1.0.0",
-        lifespan=lifespan,
+        lifespan=lifespan
     )
 
     app.add_middleware(StructLogMiddleware)
     app.add_middleware(CorrelationIdMiddleware)
+    app.add_middleware(CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],)
 
     app.include_router(health.router)
     app.include_router(categories.router)
