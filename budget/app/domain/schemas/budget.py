@@ -10,7 +10,7 @@ class BudgetBase(BaseModel):
     user_id: Optional[UUID] = Field(exclude=True, default=None)
     name: str
     currency: Literal['USD', 'HUF', 'UAH']
-    type: BudgetType = Field(..., description="Type of budget to create", example='simple')
+    type: BudgetType = Field(..., description="Type of budget to create")
     model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode='after')
@@ -21,7 +21,7 @@ class BudgetBase(BaseModel):
 
 class SimpleBudget(BudgetBase):
     type: Literal[BudgetType.SIMPLE]
-    total_amount: float = Field(..., example=1000.0, gt=0)
+    total_amount: float = Field(..., gt=0)
 
     model_config = {
         "json_schema_extra": {
@@ -37,8 +37,8 @@ class SimpleBudget(BudgetBase):
     }
 
 class CategoryBudgetItem(BaseModel):
-    category_id: int = Field(..., example=1)
-    amount: float = Field(..., example=300.0, gt=0)
+    category_id: int = Field(...)
+    amount: float = Field(..., gt=0)
 
 class CategoryBudget(BudgetBase):
     type: Literal[BudgetType.ENVELOPE]
@@ -62,9 +62,9 @@ class CategoryBudget(BudgetBase):
 
 class PercentageBudget(BudgetBase):
     type: Literal[BudgetType.PERCENTAGE]
-    needs_percent: float = Field(50.0, example=50.0, ge=0, le=100)
-    wants_percent:float = Field(30.0, example=30.0, ge=0, le=100)
-    savings_percent:float = Field(20.0, example=20.0, ge=0, le=100)
+    needs_percent: float = Field(50.0, ge=0, le=100)
+    wants_percent:float = Field(30.0, ge=0, le=100)
+    savings_percent:float = Field(20.0, ge=0, le=100)
 
     @model_validator(mode='after')
     def validate_percentage(self):

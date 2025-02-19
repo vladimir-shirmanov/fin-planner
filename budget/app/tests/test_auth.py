@@ -1,6 +1,6 @@
 from fastapi.security import OAuth2AuthorizationCodeBearer
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 from uuid import UUID
 from fastapi import HTTPException
 from jwt.exceptions import InvalidTokenError
@@ -22,13 +22,6 @@ def mock_settings():
     settings.auth_token_url = "http://auth/token"
     settings.auth_url = "http://auth/authorize"
     return settings
-
-@pytest.fixture
-def mock_logger():
-    logger = AsyncMock()
-    logger.ainfo = AsyncMock()
-    logger.aerror = AsyncMock()
-    return logger
 
 @pytest.fixture
 def mock_jwks_client():
