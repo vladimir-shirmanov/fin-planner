@@ -6,7 +6,7 @@ from fastapi import Depends
 from typing import Annotated 
 
 class BudgetService:
-    def __init__(self, budget_repository: Repository = Depends(BudgetRepository), logger = Depends(NamedLogger('budget_service'))):
+    def __init__(self, budget_repository: Repository[BudgetBase] = Depends(BudgetRepository), logger = Depends(NamedLogger('budget_service'))):
         self.budget_repository = budget_repository
         self.logger = logger
     
