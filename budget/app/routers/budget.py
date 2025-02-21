@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from ..domain.schemas import BudgetCreatePayload, SimpleBudget, CategoryBudget, PercentageBudget
+from fastapi import APIRouter, HTTPException, status
+from ..domain.schemas import BudgetCreatePayload, SimpleBudget, CategoryBudget, PercentageBudget, BudgetBase
 from ..domain.exceptions import RepositoryError
 from ..application.services import BudgetServiceDep
 from ..infrastructure.auth import current_user_dep
@@ -80,7 +80,7 @@ router = APIRouter(prefix="/budget", tags=["budgets"])
                     }
                 }
             },
-            status_code=201,
+            status_code=status.HTTP_201_CREATED,
             response_model_exclude={"user_id"})
 async def create_budget(
     payload: BudgetCreatePayload,
@@ -92,6 +92,19 @@ async def create_budget(
         budget_data['user_id'] = user.user_id
         return await service.create_budget(payload.model_validate(budget_data))
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except RepositoryError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    
+@router.get('',
+            response_model=list[BudgetBase],
+            status_code=status.HTTP_200_OK)
+async def get_created_budgets(
+    user: current_user_dep,
+    service: BudgetServiceDep
+) -> list[BudgetBase]:
+    """Get budgets created by user"""
+    try:
+        return await service.get_all_budgets(user.user_id)
+    except RepositoryError as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

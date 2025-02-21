@@ -5,7 +5,7 @@ from uuid import UUID
 from ...infrastructure.database.models.budget import BudgetType
 
 class BudgetBase(BaseModel):
-    id: Optional[int] = Field(exclude=True, default=None)
+    id: Optional[int] = Field(default=None)
     start_date: date
     end_date: date
     user_id: Optional[UUID] = Field(exclude=True, default=None)
