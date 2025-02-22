@@ -24,7 +24,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(length=50), nullable=False),
-    sa.Column('type', sa.Enum('PERCENTAGE', 'ENVELOPE', name='budget_type_enum'), nullable=False),
+    sa.Column('type', sa.Enum('SIMPLE','PERCENTAGE', 'ENVELOPE', name='budget_type_enum'), nullable=False),
     sa.Column('currency', sa.String(length=3), nullable=False),
     sa.Column('start_date', sa.Date(), nullable=False),
     sa.Column('end_date', sa.Date(), nullable=False),

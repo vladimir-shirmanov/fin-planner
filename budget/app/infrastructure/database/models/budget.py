@@ -3,7 +3,7 @@ from sqlalchemy import Column, Date, ForeignKey, Integer, String, UUID, Enum, Nu
 from sqlalchemy.orm import relationship
 import enum
 
-class BudgetType(enum.Enum):
+class BudgetType(str, enum.Enum):
     PERCENTAGE = "percentage"
     ENVELOPE = "envelope"
     SIMPLE = 'simple'

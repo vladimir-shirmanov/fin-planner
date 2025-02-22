@@ -20,6 +20,7 @@ services:
       KC_PROXY_ADDRESS_FORWARDING: true
     ports:
       - "9000:9000"
+      - "8080:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data
       - app_logs:/var/log/apps
