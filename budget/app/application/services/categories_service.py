@@ -1,7 +1,7 @@
 from typing import List, Annotated
 from fastapi import Depends
 from sqlalchemy.future import select
-from ..dependencies.core import db_session_dep, NamedLogger
+from ...infrastructure import db_session_dep, NamedLogger
 from ...domain.schemas.category import CategoryCreate, CategoryResponse
 from ...domain.configs.categories_init import ADMIN_USER_ID
 from ...infrastructure.database.models.category import Category

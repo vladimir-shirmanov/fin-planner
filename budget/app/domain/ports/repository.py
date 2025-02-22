@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from typing import List
+from .specification import Specification
 
 class Repository[T](ABC):
     @abstractmethod
@@ -11,6 +13,10 @@ class Repository[T](ABC):
 
     @abstractmethod
     def get_all(self) -> list[T]:
+        pass
+
+    @abstractmethod
+    def find(self, specification: Specification) -> List[T]:
         pass
 
     @abstractmethod

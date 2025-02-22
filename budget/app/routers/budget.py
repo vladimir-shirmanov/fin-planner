@@ -3,7 +3,7 @@ from ..domain.schemas import BudgetCreatePayload, SimpleBudget, CategoryBudget, 
 from ..domain.exceptions import RepositoryError
 from ..application.services import BudgetServiceDep
 from ..infrastructure.auth import current_user_dep
-from typing import Union
+from typing import Union, List
 
 router = APIRouter(prefix="/budget", tags=["budgets"])
 
@@ -102,7 +102,7 @@ async def create_budget(
 async def get_created_budgets(
     user: current_user_dep,
     service: BudgetServiceDep
-) -> list[BudgetBase]:
+) -> List[BudgetBase]:
     """Get budgets created by user"""
     try:
         return await service.get_all_budgets(user.user_id)

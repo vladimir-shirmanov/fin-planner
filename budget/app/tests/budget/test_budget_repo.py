@@ -4,10 +4,15 @@ from unittest.mock import patch, MagicMock
 from sqlalchemy.exc import SQLAlchemyError
 
 from ...infrastructure.database.repositories import BudgetRepository
-from ...infrastructure.database.models.budget import BudgetType, SimpleBudget
+from ...infrastructure.database.models.budget import BudgetType, SimpleBudget, Budget
 from ...domain.schemas import SimpleBudget, PercentageBudget, CategoryBudget
 from ...domain.exceptions import RepositoryError
 
+@pytest.fixture
+def mock_spec_resolver():
+    resolver = MagicMock()
+    resolver.resolve.return_value = True
+    return resolver
 
 @pytest.mark.asyncio
 async def test_create_simple_budget(mock_db):
@@ -162,3 +167,47 @@ async def test_create_db_cannot_save_should_throws_repository_exception(mock_db)
 
         # assert
         mock_db.rollback.assert_awaited_once()
+
+@pytest.mark.asyncio
+async def test_find_success_flow(mock_db, mock_spec_resolver):
+    #arrange
+    db_res_mock = MagicMock()
+    db_res_mock.fetchall.return_value = [Budget(
+        id=1,
+        user_id=uuid.uuid4(),
+        name="Test Budget",
+        type=BudgetType.ENVELOPE,
+        currency="USD",
+        start_date="2025-01-01",
+        end_date="2025-12-31",
+    )]
+    mock_db.scalars.return_value = db_res_mock
+
+    repo = BudgetRepository(mock_db, mock_spec_resolver)
+
+    #act
+    result = await repo.find(MagicMock())
+
+    #assert
+    assert len(result) == 1
+
+@pytest.mark.asyncio
+async def test_find_exception_flow(mock_db, mock_spec_resolver):
+    #arrange
+    db_res_mock = MagicMock()
+    db_res_mock.fetchall.return_value = [Budget(
+        id=1,
+        user_id=uuid.uuid4(),
+        name="Test Budget",
+        type=BudgetType.ENVELOPE,
+        currency="USD",
+        start_date="2025-01-01",
+        end_date="2025-12-31",
+    )]
+    mock_db.scalars.side_effect = SQLAlchemyError('Db error')
+
+    repo = BudgetRepository(mock_db, mock_spec_resolver)
+
+    #act, assert
+    with pytest.raises(RepositoryError):
+        result = await repo.find(MagicMock())

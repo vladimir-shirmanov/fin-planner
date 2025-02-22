@@ -1,16 +1,23 @@
-from ....application.dependencies import db_session_dep
-from ....domain.ports import Repository
+from ... import db_session_dep
+from ....domain.ports import Repository, Specification
 from ....domain.schemas import BudgetBase
 from ....domain.exceptions import RepositoryError
 from ....infrastructure.database.models import Budget, SimpleBudget, EnvelopBudget, PercentageBudget
 from ..models.budget import BudgetType
+from ..resolvers.spec_resolver import SpecificationResolver
+from ...dependency import get_resolver
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.future import select
+from typing import List
+from fastapi import Depends
 
 class BudgetRepository(Repository[BudgetBase]):
-    def __init__(self, db: db_session_dep):
+    def __init__(self, 
+                 db: db_session_dep,
+                 resolver: SpecificationResolver = Depends(get_resolver(Budget))):
         self.db = db
+        self.resolver = resolver
 
     async def create(self, schema: BudgetBase) -> BudgetBase:
         try:
@@ -65,6 +72,16 @@ class BudgetRepository(Repository[BudgetBase]):
         query = await self.db.execute(select(Budget))
         budgets = query.scalars().all()
         return (BudgetBase.model_validate(budget) for budget in budgets)
+    
+    async def find(self, spec: Specification) -> List[BudgetBase]:
+        try:
+            query = select(Budget)
+            resolved = self.resolver.resolve(spec=spec)
+            result = await self.db.scalars(query.where(resolved))
+            budgets_db = result.fetchall()
+            return [BudgetBase.model_validate(budget) for budget in budgets_db]
+        except SQLAlchemyError as e:
+            raise RepositoryError("Can't read from the database") from e
 
     async def get_by_id(self, id: int):
         pass
