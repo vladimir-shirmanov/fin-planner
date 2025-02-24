@@ -84,7 +84,24 @@ class BudgetRepository(Repository[BudgetBase]):
             raise RepositoryError("Can't read from the database") from e
 
     async def get_by_id(self, id: int):
-        pass
+        try:
+            budget = await self.db.get(id)
+            if not budget:
+                return None
+            specific_data = None
+            match budget.type:
+                case BudgetType.SIMPLE:
+                    simple_db = await self.db.get(SimpleBudget, budget.id)
+                    if not simple_db:
+                        return None
+                    specific_data = SimpleBudget(
+                        id=budget.id,
+                        start_date=budget.start_date
+                    )
+
+            return specific_data
+        except SQLAlchemyError as e:
+            raise RepositoryError("Can't read from the database") from e
 
     async def delete(self, id: int):
         pass

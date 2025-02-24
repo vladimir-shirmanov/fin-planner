@@ -108,3 +108,21 @@ async def get_created_budgets(
         return await service.get_all_budgets(user.user_id)
     except RepositoryError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@router.get('{id}',
+            response_model=Union[SimpleBudget, PercentageBudget, CategoryBudget],
+            status_code=status.HTTP_200_OK)
+async def get_by_id(
+    id: int,
+    user: current_user_dep,
+    service: BudgetServiceDep
+) -> Union[SimpleBudget, PercentageBudget, CategoryBudget]:
+    """Get budget by id"""
+    try:
+        budget = await service.get_budget_by_id(user.user_id, id)
+        if not budget:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You're not an author")
+        return budget
+    except RepositoryError as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
