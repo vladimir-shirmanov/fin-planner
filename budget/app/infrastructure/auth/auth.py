@@ -6,7 +6,7 @@ from jwt import PyJWKClient
 from typing import Annotated
 from ...domain.configs.config import settings_dep, get_settings
 from ...domain.schemas.user import User
-from ...application.dependencies.core import NamedLogger
+from .. import NamedLogger
 from structlog.stdlib import BoundLogger
 
 settings = get_settings()

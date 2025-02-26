@@ -5,7 +5,7 @@ from starlette.responses import JSONResponse
 from structlog import BoundLogger
 
 from ..domain.configs.config import Settings, get_settings
-from ..application.dependencies.core import db_session_dep, NamedLogger
+from ..infrastructure import db_session_dep, NamedLogger
 
 router = APIRouter(tags=["health"])
 

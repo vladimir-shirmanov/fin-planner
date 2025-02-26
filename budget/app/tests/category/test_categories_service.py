@@ -3,25 +3,10 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID
 import uuid
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...domain.schemas import User, CategoryCreate, CategoryResponse, CategoryType
 from ...infrastructure.database.models import Category
 from ...application.services import CategoryService
-
-@pytest.fixture
-def mock_db():
-    """Mock database session"""
-    db = AsyncMock(spec=AsyncSession)
-    db.commit = AsyncMock()
-    db.refresh = AsyncMock()
-    db.refresh.side_effect = lambda x: setattr(x, "id", 1)
-    return db
-
-@pytest.fixture
-def mock_logger():
-    logger = AsyncMock()
-    return logger
 
 @pytest.fixture
 def category_service(mock_db, mock_logger):
